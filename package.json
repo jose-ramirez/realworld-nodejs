@@ -1,0 +1,49 @@
+{
+  "name": "realworld-nodejs",
+  "type": "module",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "start": "nodemon --exec 'babel-node --inspect=0.0.0.0 src/server.js'",
+    "build": "rm -rf dist && babel src --out-dir dist",
+    "serve": "node dist/server.js",
+    "test": "npx mocha --require @babel/register --exit",
+    "coverage": "npx nyc --reporter=html mocha --require @babel/register --exit",
+    "pretest": "eslint --ignore-path .gitignore ."
+  },
+  "dependencies": {
+    "bcrypt": "^4.0.1",
+    "boom": "^7.3.0",
+    "cookie-parser": "~1.4.4",
+    "debug": "~2.6.9",
+    "dotenv": "^8.2.0",
+    "express": "~4.16.1",
+    "express-async-handler": "^1.1.4",
+    "express-jwt": "^5.3.1",
+    "http-errors": "~1.6.3",
+    "jade": "~1.11.0",
+    "jsonwebtoken": "^8.5.1",
+    "mongoose": "^5.9.4",
+    "morgan": "^1.10.0"
+  },
+  "devDependencies": {
+    "@babel/cli": "^7.8.4",
+    "@babel/core": "^7.9.0",
+    "@babel/node": "^7.8.7",
+    "@babel/preset-env": "^7.9.5",
+    "@babel/register": "^7.9.0",
+    "@istanbuljs/nyc-config-babel": "^3.0.0",
+    "babel-eslint": "^10.1.0",
+    "babel-plugin-istanbul": "^6.0.0",
+    "chai": "^4.2.0",
+    "chai-http": "^4.3.0",
+    "cross-env": "^7.0.2",
+    "eslint": "^6.8.0",
+    "eslint-config-strongloop": "^2.1.0",
+    "faker": "^4.1.0",
+    "istanbul": "^0.4.5",
+    "mocha": "^7.1.1",
+    "nodemon": "^2.0.3",
+    "nyc": "^15.0.1"
+  }
+}
