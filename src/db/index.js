@@ -4,11 +4,12 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
-export const mongoConnectionConfig = {
+const mongoConnectionConfig = {
     useNewUrlParser: true,
     useUnifiedTopology: true
 };
 
+mongoose.set('useFindAndModify', false);
 mongoose.connect(process.env.DB_URL, mongoConnectionConfig);
 
 export const User = mongoose.model('user', {

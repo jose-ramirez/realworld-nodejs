@@ -1,6 +1,6 @@
 import { Article, User, Comment, Favorite } from '../db';
 import { createSlug } from '../utils';
-import { HttpError } from './errors';
+import { HttpError } from '../errors';
 import { getFollowedUsers } from './profiles';
 
 export const getFeed = async (user, query) => {
@@ -8,10 +8,12 @@ export const getFeed = async (user, query) => {
         throw new HttpError(401, 'Unauthorized');
     }
     const followedUserUsernames = await getFollowedUsers(user.email);
+    const articles = await Article.find(
+        {'author.username': {$in: followedUserUsernames}})
+        .sort({ createdAt: -1 });
     return {
-        articles: await Article.find(
-            {'author.username': {$in: followedUserUsernames}})
-            .sort({ createdAt: -1 })
+        articles,
+        articlesCount: articles.length
     };
 };
 
@@ -59,14 +61,15 @@ export const createArticle = async (articleData, userData) => {
     return { article: await savedArticle.save() };
 };
 
-export const updateArticle = async (articleNewData, userData, slug) => {
+export const updateArticle = async (articleNewData, userData, articleSlug) => {
     if (userData == null) {
         throw new HttpError(401, 'Unauthorized');
     }
 
     let { article } = articleNewData;
-    let { title, description, body, tagList, favoritesCount } = article;
-    let currentArticle = await Article.findOne({ slug });
+    let { title, description, body, tagList, favoritesCount, slug, favorited }
+        = article;
+    let currentArticle = await Article.findOne({ slug: articleSlug });
     if (currentArticle == null) {
         throw new HttpError(404, 'Article not found');
     }
@@ -75,12 +78,14 @@ export const updateArticle = async (articleNewData, userData, slug) => {
     if (currentUser == null) {
         throw new HttpError(404, 'User not found');
     }
-    if (userData.email !== currentArticle.author.email) {
+    if (currentUser.username !== currentArticle.author.username) {
         throw new HttpError(403, 'Operation forbidden for this user');
     }
 
     let updatedArticle = {
         author: currentArticle.author,
+        slug: typeof slug !== 'undefined'
+            ? slug : currentArticle.slug,
         title: typeof title !== 'undefined'
             ? title : currentArticle.title,
         description: typeof description !== 'undefined'
@@ -89,6 +94,8 @@ export const updateArticle = async (articleNewData, userData, slug) => {
             ? body : currentArticle.body,
         tagList: typeof tagList !== 'undefined'
             ? tagList : currentArticle.tagList,
+        favorited: typeof favorited !== 'undefined'
+            ? favorited : currentArticle.favorited,
         favoritesCount: typeof favoritesCount !== 'undefined'
             ? favoritesCount : currentArticle.favoritesCount
     };
@@ -96,7 +103,10 @@ export const updateArticle = async (articleNewData, userData, slug) => {
     if (updatedArticle.title !== currentArticle.title) {
         updatedArticle.slug = createSlug(title);
     }
-    return { article: await (new Article(updatedArticle)).save() };
+    return {
+        article: await Article.findOneAndUpdate(
+            { _id: currentArticle._id }, updatedArticle, { new: true })
+    };
 };
 
 export const deleteArticle = async (user, slug) => {

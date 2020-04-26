@@ -1,5 +1,5 @@
 import { User, Following } from '../db';
-import { HttpError } from './errors';
+import { HttpError } from '../errors';
 
 export const getProfile = async (username) => {
     if (username == null) {

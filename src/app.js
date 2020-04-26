@@ -2,7 +2,7 @@ import createError from 'http-errors';
 import express from 'express';
 import path from 'path';
 import cookieParser from 'cookie-parser';
-// import logger from 'morgan';
+import logger from 'morgan';
 
 import usersRouter from './routes/users';
 import profilesRouter from './routes/profiles';
@@ -11,7 +11,10 @@ import tagsRouter from './routes/tags';
 
 var app = express();
 
-// app.use(logger('dev')); activate logs based on environment
+if (process.env.NODE_ENV !== 'test') {
+    app.use(logger('dev'));
+}
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());

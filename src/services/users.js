@@ -1,9 +1,9 @@
 import { User } from '../db';
 import { generateToken } from './token';
+import { HttpError } from '../errors';
 import bcrypt from 'bcrypt';
-import { HttpError } from './errors';
 
-const getUserWithPassword = async (userCredentials) => {
+export const getUserWithPassword = async (userCredentials) => {
     if (userCredentials == null) {
         throw new HttpError(400, 'Bad request');
     }
@@ -24,7 +24,7 @@ const getUserWithPassword = async (userCredentials) => {
     }
 };
 
-const getUserWithToken = async (userCredentials) => {
+export const getUserWithToken = async (userCredentials) => {
     if (userCredentials == null) {
         throw new HttpError(400, 'Bad request');
     }
@@ -39,11 +39,17 @@ const getUserWithToken = async (userCredentials) => {
     return { user };
 };
 
-const saveUser = async (userData) => {
+export const saveUser = async (userData) => {
     if (userData == null) {
         throw new HttpError(400, 'Bad request');
     }
-    let { email, password, username } = userData;
+    let { email, password, username, bio, image } = userData;
+    if (typeof bio === 'undefined') {
+        userData.bio = null;
+    }
+    if (typeof image === 'undefined') {
+        userData.image = null;
+    }
     if (!email || !password || !username) {
         throw new HttpError(400, 'Bad request: Data missing');
     }
@@ -55,7 +61,7 @@ const saveUser = async (userData) => {
     return { user: savedUser };
 };
 
-const updateUser = async (userNewData, userCurrentData) => {
+export const updateUser = async (userNewData, userCurrentData) => {
     if (userNewData == null) {
         throw new HttpError(400, 'Bad request');
     }
@@ -83,5 +89,3 @@ const updateUser = async (userNewData, userCurrentData) => {
     await User.updateOne({ email }, currentUser);
     return { user: currentUser };
 };
-
-export { getUserWithToken, getUserWithPassword, saveUser, updateUser };
