@@ -1,7 +1,8 @@
 import chaiHttp from 'chai-http';
 import { use, should as _should, expect, request } from 'chai';
 import { generateToken } from '../src/services/token';
-import { it, describe, before, after } from 'mocha';
+import { it, describe, before, after, beforeEach, afterEach } from 'mocha';
+import bcrypt from 'bcrypt';
 import { User } from '../src/db';
 import { createFakeUser } from '../src/utils';
 
@@ -16,6 +17,9 @@ const userData = createFakeUser();
 const nonExistingUserToken = generateToken({ email: 'asd@emails.com' });
 
 describe('POST /api/users (signup)', () => {
+    afterEach(async () => {
+        await User.deleteMany({});
+    });
     const BASE_PATH = '/api/users';
     it('should return the registered user', done => {
         request(app)
@@ -66,12 +70,13 @@ describe('POST /api/users (signup)', () => {
 
 describe('POST /api/users/login', () => {
     const BASE_PATH = '/api/users/login';
-
-    before(async () => {
+    const rawPassword = (' ' + userData.password).slice(1);
+    beforeEach(async () => {
+        userData.password = await bcrypt.hash(userData.password, 10);
         await (new User(userData)).save();
     });
 
-    after(async () => {
+    afterEach(async () => {
         await User.deleteMany({});
     });
 
@@ -81,7 +86,7 @@ describe('POST /api/users/login', () => {
             .send({
                 user: {
                     email: userData.email,
-                    password: userData.password
+                    password: rawPassword
                 }
             })
             .end((err, res) => {
