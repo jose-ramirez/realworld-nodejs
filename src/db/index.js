@@ -13,9 +13,17 @@ mongoose.set('useFindAndModify', false);
 mongoose.connect(process.env.DB_URL, mongoConnectionConfig);
 
 export const User = mongoose.model('user', {
-    username: String,
+    username: {
+        type: String,
+        required: true,
+        unique: true
+    },
+    email: {
+        type: String,
+        required: true,
+        unique: true
+    },
     token: String,
-    email: String,
     password: String,
     bio: String,
     image: String
@@ -48,7 +56,11 @@ export const Favorite = mongoose.model('favorite', new mongoose.Schema({
 }, { timestamps: true }));
 
 export const Article = mongoose.model('article', new mongoose.Schema({
-    slug: String,
+    slug: {
+        type: String,
+        required: true,
+        unique: true
+    },
     title: String,
     description: String,
     body: String,
