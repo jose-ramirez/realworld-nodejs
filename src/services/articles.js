@@ -7,10 +7,13 @@ export const getFeed = async (user, query) => {
     if (user == null) {
         throw new HttpError(401, 'Unauthorized');
     }
+    const { limit, skip } = query;
     const followedUserUsernames = await getFollowedUsers(user.email);
     const articles = await Article.find(
         {'author.username': {$in: followedUserUsernames}})
-        .sort({ createdAt: -1 });
+        .sort({ createdAt: -1 })
+        .limit(limit || 20)
+        .skip(skip || 0);
     return {
         articles,
         articlesCount: articles.length
@@ -18,11 +21,15 @@ export const getFeed = async (user, query) => {
 };
 
 export const getArticles = async (filter) => {
-    let { author, tag } = filter;
+    let { author, tag, skip, limit } = filter;
     let constraints = {};
     if (author) { constraints['author.username'] = author; }
     if (tag) { constraints.tagList = tag; }
-    const articles = await Article.find().sort({createdAt: -1});
+
+    const articles = await Article.find()
+        .sort({createdAt: -1})
+        .limit(limit || 20)
+        .skip(skip || 0);
 
     return { articles, articlesCount: articles.length };
 };
