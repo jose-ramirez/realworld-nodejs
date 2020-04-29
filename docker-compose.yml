@@ -1,0 +1,20 @@
+version: '3'
+services:
+  app:
+    build: ./
+    container_name: realworld-api
+    environment:
+      DB_HOST: realworld-db
+      NODE_ENV: development
+    volumes:
+      - ./:/var/www/app
+    ports:
+      - 3000:3000
+    command: sh -c 'npm i && npm start'
+    depends_on:
+      - db
+  db:
+    image: mongo
+    container_name: realworld-db
+    ports:
+      - "27017:27017"

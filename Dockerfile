@@ -9,5 +9,6 @@ RUN npm install
 COPY ./src ./src
 COPY .babelrc ./
 COPY .env ./
+COPY .gitignore ./
 
 EXPOSE 3000 3000
