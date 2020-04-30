@@ -4,7 +4,7 @@ import { generateToken } from '../src/services/token';
 import { it, describe, before, after, beforeEach, afterEach } from 'mocha';
 import bcrypt from 'bcrypt';
 import { User } from '../src/db';
-import { createFakeUser } from '../src/utils';
+import { createFakeUser } from './utils';
 
 use(chaiHttp);
 

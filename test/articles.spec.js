@@ -4,7 +4,7 @@ import {
     createFakeArticle,
     createFakeUser,
     getProfileFromUser,
-    createFakeComment } from '../src/utils';
+    createFakeComment } from './utils';
 import { it, describe, before, after, beforeEach, afterEach } from 'mocha';
 import { User, Article, Comment, Favorite, Following } from '../src/db';
 

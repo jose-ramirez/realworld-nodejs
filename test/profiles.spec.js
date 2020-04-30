@@ -4,7 +4,7 @@ import { use, should as _should, expect, request } from 'chai';
 import { generateToken } from '../src/services/token';
 import { it, describe, beforeEach, afterEach } from 'mocha';
 import { User, Following } from '../src/db';
-import { createFakeUser } from '../src/utils';
+import { createFakeUser } from './utils';
 
 use(chaiHttp);
 
