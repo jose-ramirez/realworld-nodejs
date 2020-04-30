@@ -141,16 +141,10 @@ export const getComments = async (slug) => {
     if (article == null) {
         throw new HttpError(404, 'Article not found');
     }
-    const result = await Article.aggregate([{ $match: { slug } }, {
-        $lookup: {
-            from: 'comments',
-            localField: '_id',
-            foreignField: 'articleId',
-            as: 'comments'
-        }
-    }]);
-    const { comments } = result[0];
-    return { comments };
+    const result = await Comment
+        .find({ articleId: article._id })
+        .sort({ createdAt: -1 });
+    return { comments: result };
 };
 
 export const createComment = async (slug, data, user) => {
