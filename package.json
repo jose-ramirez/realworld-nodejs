@@ -7,7 +7,7 @@
     "start": "nodemon --exec 'babel-node --inspect=0.0.0.0 src/server.js'",
     "build": "rm -rf dist && babel src --out-dir dist",
     "serve": "node dist/server.js",
-    "test": "cross-env NODE_ENV=test npx mocha --require @babel/register --exit",
+    "test": "clear && cross-env NODE_ENV=test npx mocha --require @babel/register --exit",
     "coverage": "npx nyc --reporter=html mocha --require @babel/register --exit",
     "pretest": "eslint --ignore-path .gitignore ."
   },
