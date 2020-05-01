@@ -1,4 +1,5 @@
-import { Article, User, Comment, Favorite } from '../db';
+import { Article, Favorite } from '../db';
+import { getUserByEmail } from './users';
 import { createSlug } from '../utils';
 import { HttpError } from '../errors';
 import { getFollowedUsers } from './profiles';
@@ -46,26 +47,19 @@ export const createArticle = async (articleData, userData) => {
     if (userData == null) {
         throw new HttpError(401, 'Unauthorized');
     }
-    let { email } = userData;
-    let { article } = articleData;
-    let user = await User.findOne({ email });
-    if (user == null) {
-        throw new HttpError(404, 'User not found');
-    }
+
+    let user = await getUserByEmail(userData);
     let { username, bio, image } = user;
 
+    let { article } = articleData;
     article.author = {
         username, bio, image, following: false,
     };
-
     article.slug = createSlug(article.title);
-
     article.favorited = false;
     article.favoritesCount = 0;
 
-    let savedArticle = new Article(article);
-
-    return { article: await savedArticle.save() };
+    return { article: await (new Article(article)).save() };
 };
 
 export const updateArticle = async (articleNewData, userData, articleSlug) => {
@@ -73,154 +67,77 @@ export const updateArticle = async (articleNewData, userData, articleSlug) => {
         throw new HttpError(401, 'Unauthorized');
     }
 
-    let { article } = articleNewData;
-    let { title, description, body, tagList, favoritesCount, slug, favorited }
-        = article;
-    let currentArticle = await Article.findOne({ slug: articleSlug });
-    if (currentArticle == null) {
-        throw new HttpError(404, 'Article not found');
-    }
+    const { title, description, body, tagList, favoritesCount, slug, favorited }
+        = articleNewData.article;
 
-    let currentUser = await User.findOne({ email: userData.email });
-    if (currentUser == null) {
-        throw new HttpError(404, 'User not found');
-    }
-    if (currentUser.username !== currentArticle.author.username) {
+    const { article } = await getArticle(articleSlug);
+
+    const { user } = await getUserByEmail(userData);
+
+    if (user.username !== article.author.username) {
         throw new HttpError(403, 'Operation forbidden for this user');
     }
 
     let updatedArticle = {
-        author: currentArticle.author,
+        author: article.author,
         slug: typeof slug !== 'undefined'
-            ? slug : currentArticle.slug,
+            ? slug : article.slug,
         title: typeof title !== 'undefined'
-            ? title : currentArticle.title,
+            ? title : article.title,
         description: typeof description !== 'undefined'
-            ? description : currentArticle.description,
+            ? description : article.description,
         body: typeof body !== 'undefined'
-            ? body : currentArticle.body,
+            ? body : article.body,
         tagList: typeof tagList !== 'undefined'
-            ? tagList : currentArticle.tagList,
+            ? tagList : article.tagList,
         favorited: typeof favorited !== 'undefined'
-            ? favorited : currentArticle.favorited,
+            ? favorited : article.favorited,
         favoritesCount: typeof favoritesCount !== 'undefined'
-            ? favoritesCount : currentArticle.favoritesCount
+            ? favoritesCount : article.favoritesCount
     };
 
-    if (updatedArticle.title !== currentArticle.title) {
+    if (updatedArticle.title !== article.title) {
         updatedArticle.slug = createSlug(title);
     }
     return {
         article: await Article.findOneAndUpdate(
-            { _id: currentArticle._id }, updatedArticle, { new: true })
+            { _id: article._id }, updatedArticle, { new: true })
     };
 };
 
-export const deleteArticle = async (user, slug) => {
-    if (user == null) {
+export const deleteArticle = async (userData, slug) => {
+    if (userData == null) {
         throw new HttpError(401, 'Unauthorized');
     }
-    const { email } = user;
-    const article = await Article.findOne({ slug });
-    if (article == null) {
-        throw new HttpError(404, 'Article not found');
-    }
-    if (email !== article.author.email) {
+
+    let { user } = await getUserByEmail(userData);
+
+    const { article } = await getArticle(slug);
+
+    if (user.username !== article.author.username) {
         throw new HttpError(403, 'Operation forbidden for this user');
-    }
-    const someUser = await User.findOne({ email });
-    if (someUser == null) {
-        throw new HttpError(404, 'User not found');
     }
 
     await Article.deleteOne({ slug });
 };
 
-export const getComments = async (slug) => {
-    const article = await Article.findOne({ slug });
-    if (article == null) {
-        throw new HttpError(404, 'Article not found');
-    }
-    const result = await Comment
-        .find({ articleId: article._id })
-        .sort({ createdAt: -1 });
-    return { comments: result };
-};
-
-export const createComment = async (slug, data, user) => {
-    if (user == null) {
-        throw new HttpError(401, 'Unauthorized');
-    }
-    const { email } = user;
-    const commentAuthor = await User.findOne({ email });
-    if (commentAuthor == null) {
-        throw new HttpError(404, 'User not found');
-    }
-    const article = await Article.findOne({ slug });
-    if (article == null) {
-        throw new HttpError(404, 'Article not found');
-    }
-    if (data == null || data.comment.body == null) {
-        throw new HttpError(400, 'Bad request');
-    }
-    const { bio, image, username } = commentAuthor;
-    let { comment } = data;
-    const { _id } = article;
-    comment.author = { bio, image, username };
-    comment.articleId = _id;
-    return {
-        comment: await (new Comment(comment)).save()
-    };
-
-};
-
-export const deleteComment = async (slug, _id, user) => {
-    if (user == null) {
-        throw new HttpError(401, 'Unauthorized');
-    }
-    const { email } = user;
-    const commentDeleter = await User.findOne({ email });
-    if (commentDeleter == null) {
-        throw new HttpError(404, 'User not found');
-    }
-    const article = await Article.findOne({ slug });
-    if (article == null) {
-        throw new HttpError(404, 'Article not found');
-    }
-    const comment = await Comment.findOne({ _id });
-    if (comment == null) {
-        throw new HttpError(404, 'Comment not found');
-    }
-    if (commentDeleter.username !== comment.author.username) {
-        throw new HttpError(403, 'Operation forbidden for this user');
-    }
-    return await Comment.deleteOne({ _id });
-};
-
-export const likeArticle = async (slug, user) => {
-    if (user == null) {
+export const likeArticle = async (slug, userData) => {
+    if (userData == null) {
         throw new HttpError(401, 'Unauthorized');
     }
 
-    let { email } = user;
-    const currentUser = await User.findOne({ email });
-    if (currentUser == null) {
-        throw new HttpError(404, 'User not found');
-    }
+    let { user } = await getUserByEmail(userData);
 
-    const article = await Article.findOne({ slug });
-    if (article == null) {
-        throw new HttpError(404, 'Article not found');
-    }
+    const { article } = await getArticle(slug);
 
     const favorited = await Favorite.findOne({
-        userId: currentUser._id,
+        userId: user._id,
         articleId: article._id
     });
 
     if (favorited == null) {
         await (new Favorite({
-            userId: currentUser._id,
+            userId: user._id,
             articleId: article._id
         })).save();
         article.favoritesCount += 1;
@@ -230,24 +147,17 @@ export const likeArticle = async (slug, user) => {
     return { article };
 };
 
-export const unlikeArticle = async (slug, user) => {
-    if (user == null) {
+export const unlikeArticle = async (slug, userData) => {
+    if (userData == null) {
         throw new HttpError(401, 'Unauthorized');
     }
 
-    let { email } = user;
-    const currentUser = await User.findOne({ email });
-    if (currentUser == null) {
-        throw new HttpError(404, 'User not found');
-    }
+    let { user } = await getUserByEmail(userData);
 
-    const article = await Article.findOne({ slug });
-    if (article == null) {
-        throw new HttpError(404, 'Article not found');
-    }
+    const { article } = await getArticle(slug);
 
     const result = await Favorite.deleteOne({
-        userId: currentUser._id,
+        userId: user._id,
         articleId: article._id
     });
 

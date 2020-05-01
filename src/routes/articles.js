@@ -6,13 +6,16 @@ import {
     createArticle,
     updateArticle,
     deleteArticle,
-    createComment,
-    deleteComment,
-    getComments,
     likeArticle,
     unlikeArticle,
     getFeed
 } from '../services/articles';
+
+import {
+    createComment,
+    deleteComment,
+    getComments
+} from '../services/comments';
 
 let router = express.Router();
 
