@@ -3,7 +3,7 @@ import {
     saveUser,
     updateUser,
     getUserWithPassword,
-    getUserWithToken
+    getUserByEmail
 } from '../services/users';
 import { middleware } from './middleware/jwt';
 
@@ -27,7 +27,7 @@ router.post('/users/login', async function (req, res, next) {
 
 router.get('/user', middleware, async (req, res, next) => {
     try {
-        const user = await getUserWithToken(req.user);
+        const user = await getUserByEmail(req.user);
         res.status(200).send(user);
     } catch (error) {
         next(error);

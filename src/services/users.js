@@ -24,7 +24,7 @@ export const getUserWithPassword = async (userCredentials) => {
     }
 };
 
-export const getUserWithToken = async (userCredentials) => {
+export const getUserByEmail = async (userCredentials) => {
     if (userCredentials == null) {
         throw new HttpError(400, 'Bad request');
     }
