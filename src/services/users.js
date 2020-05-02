@@ -1,4 +1,4 @@
-import { User } from '../db';
+import { User, Following } from '../db';
 import { generateToken } from './token';
 import { HttpError } from '../errors';
 import bcrypt from 'bcrypt';
@@ -22,6 +22,17 @@ export const getUserWithPassword = async (userCredentials) => {
         }
         return { user };
     }
+};
+
+export const getUserByUsername = async (username) => {
+    if (username == null) {
+        throw new HttpError(400, 'Bad request');
+    }
+    let user = await User.findOne({ username });
+    if (user == null) {
+        throw new HttpError(404, 'User not found');
+    }
+    return { user };
 };
 
 export const getUserByEmail = async (userCredentials) => {
@@ -88,4 +99,12 @@ export const updateUser = async (userNewData, userCurrentData) => {
     currentUser.token = generateToken({ email: currentUser.email });
     await User.updateOne({ email }, currentUser);
     return { user: currentUser };
+};
+
+export const getFollowedUsers = async (email) => {
+    const { user } = await getUserByEmail({ email });
+    const followedUserIds = (await Following.find({ followerUserId: user._id }))
+        .map(f => f.followedUserId);
+    const users = await User.find({_id: { $in: followedUserIds }});
+    return users.map(u => u.username);
 };

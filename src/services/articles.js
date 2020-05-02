@@ -2,7 +2,7 @@ import { Article, Favorite } from '../db';
 import { getUserByEmail } from './users';
 import { createSlug } from '../utils';
 import { HttpError } from '../errors';
-import { getFollowedUsers } from './profiles';
+import { getFollowedUsers } from './users';
 
 export const getFeed = async (user, query) => {
     if (user == null) {
